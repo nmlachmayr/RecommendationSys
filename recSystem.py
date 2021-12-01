@@ -52,7 +52,7 @@ def readJSON(filen):
     return data
 '''
 Create dic of lists
-asin of games is the keys of dictionaries, values are a
+asin of games is the keys of dictionaries, values are a tuple of (UserID,score)
 
 Users input:
 ['AB9S9279OZ3QO', '0078764343', '5.0', '1373155200']
@@ -75,7 +75,7 @@ def createDicOfGames(users):
 
 '''
 Create dic of lists
-asin of games is the keys of dictionaries, values are a
+UserID is the keys of dictionaries, values are a tuple of (asin,score)
 
 Users input:
 ['AB9S9279OZ3QO', '0078764343', '5.0', '1373155200']
