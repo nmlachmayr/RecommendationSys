@@ -2,6 +2,7 @@ import csv
 import json
 import time
 from scipy import stats
+import scipy
 
 '''
 Reads video games ratings, adds to list of tuples
@@ -95,20 +96,57 @@ def createDicOfUsers(users):
     return d
 
 
+def topNclosestNeighborsPearson(N, d, key):
+    l = []
+    for x in d:
+        #print(d[key], d[x])
+        m = min(len(d[key]),len(d[x]))
+        #print(m)
+        #print(d[key][:m], d[x][:m])
+        if m > 2:
+            t1 = extractItemFromTuples(d[key][:m], 1)
+            t2 = extractItemFromTuples(d[x][:m], 1)
+            #print(x)
+            #print("t1: ", t1)
+            #print("t2: ", t2)
+            val1, val2 = stats.pearsonr(t1, t2)
+            #print(val1, val2)
+            l.append((x, val2))
+        else:
+            #if m < 2 then pearsonr doesnt work so score it 0
+            l.append((x, 0))
+
+    l.sort(key=lambda x:x[1])#sort each list by second element in tuple(pearson score)
+
+    return l[:N]
+
+def extractItemFromTuples(t, i):
+    l = []
+    for x in t:
+        l.append(float(x[i]))
+
+    return l
+
 def main():
     print("start main")
     reviewData = readCSV('ratings_Video_games.csv')
-    print(reviewData[1])
+    #print(reviewData[1])
     metaData = readJSON('meta_Video_Games.json')
-    print(metaData[0]['asin'])
+    #print(metaData[0]['asin'])
 
 
     dGames = createDicOfGames(reviewData)
     dUsers = createDicOfUsers(reviewData)
-    print(dGames['B00LGBJIQ4'])#[('AEEMJX418B5RC', '5.0'), ('A265KF0CQ058RZ', '5.0'), ('A20J2PMC9ZPD4F', '5.0'), ('A3HMVWAGUCNA1K', '5.0')]
-    print(dUsers['A265KF0CQ058RZ'])#[('B004RMK4BC', '5.0'), ('B00KKAQYXM', '5.0'), ('B00LGBJIQ4', '5.0')]
+    #print(dGames['B00LGBJIQ4'])#[('AEEMJX418B5RC', '5.0'), ('A265KF0CQ058RZ', '5.0'), ('A20J2PMC9ZPD4F', '5.0'), ('A3HMVWAGUCNA1K', '5.0')]
+    #print(dUsers['A265KF0CQ058RZ'])#[('B004RMK4BC', '5.0'), ('B00KKAQYXM', '5.0'), ('B00LGBJIQ4', '5.0')]
+
+    print("Number of Items: ",len(dGames))#Number of Items:  50210
+    print("Number of Users: ", len(dUsers))#Number of Users:  826767
 
 
+    d = topNclosestNeighborsPearson(10, dGames, 'B00KKAQYXM')
+    print(d)
+    
     return 0
 
 if __name__ == '__main__':
