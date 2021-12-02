@@ -3,11 +3,12 @@ import json
 import time
 from scipy import stats
 import scipy
+import ast
 
 '''
 Reads video games ratings, adds to list of tuples
 
-UserID, GameID, Rating, GameID(??)
+UserID, GameID, Rating, timestamp
 AB9S9279OZ3QO,0078764343,5.0,1373155200
 '''
 def readCSV(filen):
@@ -25,31 +26,14 @@ replace all 's for "s and then convert to JSON then add to data (list of dics)
 as of now 30k/50k work, rest throw error for some reason that i cant figure out
 '''
 def readJSON(filen):
+    with open(filen) as f:
+        lines = f.readlines()
 
-    tweets = []
-    f = open(filen, 'r')
-
-    l = []
-    for line in f:
-        n = line.replace("'", '"')
-        l.append(n)  
-        
-    data = []
-    for x in l:
-        try:
-            t = json.loads(x) 
-            data.append(t)
-        
-        except(Exception):
-            time.sleep(0);
-            #print("error")
-            #print out erronious string and wait.
-            #print(x)
-            #time.sleep(60)
-        
-    #print(len(data))
-    #print(data[0]["description"])
-
+    data = {}
+    for x in lines:
+        j = ast.literal_eval(x)
+        data[j['asin']] = j
+    
     return data
 '''
 Create dic of lists
@@ -95,57 +79,62 @@ def createDicOfUsers(users):
             d[userID].append((gameID,rating))
     return d
 
+def calcPearson(dicofusers, gamesDic, listOfUserID, listOfGameID, user):
 
-def topNclosestNeighborsPearson(N, d, key):
-    l = []
-    for x in d:
-        #print(d[key], d[x])
-        m = min(len(d[key]),len(d[x]))
-        #print(m)
-        #print(d[key][:m], d[x][:m])
-        if m > 2:
-            t1 = extractItemFromTuples(d[key][:m], 1)
-            t2 = extractItemFromTuples(d[x][:m], 1)
-            #print(x)
-            #print("t1: ", t1)
-            #print("t2: ", t2)
-            val1, val2 = stats.pearsonr(t1, t2)
-            #print(val1, val2)
-            l.append((x, val2))
-        else:
-            #if m < 2 then pearsonr doesnt work so score it 0
-            l.append((x, 0))
+    temp1 = [0] * len(gamesDic)
+    temp1[0] = float(listOfUserID.index(user))
+    for y in dicofusers[user]:
+        temp1[listOfGameID.index(y[0])+1] = float(y[1])
 
-    l.sort(key=lambda x:x[1])#sort each list by second element in tuple(pearson score)
+    for x in listOfUserID:
+        temp2 = [0] * len(gamesDic)
+        temp2[0] = float(listOfUserID.index(x))
+        for y in dicofusers[x]:
+            temp2[listOfGameID.index(y[0])+1] = float(y[1])
+    
 
-    return l[:N]
+        t1, t2 = stats.pearsonr(temp1, temp2)
+        print(x)
+        print(t1,t2)
 
-def extractItemFromTuples(t, i):
-    l = []
-    for x in t:
-        l.append(float(x[i]))
+    return 0
 
-    return l
+
 
 def main():
     print("start main")
-    reviewData = readCSV('ratings_Video_games.csv')
+    #reviewData = readCSV('ratings_Video_games.csv')
     #print(reviewData[1])
-    metaData = readJSON('meta_Video_Games.json')
+    #metaData = readJSON('meta_Video_Games.json')
     #print(metaData[0]['asin'])
 
 
-    dGames = createDicOfGames(reviewData)
-    dUsers = createDicOfUsers(reviewData)
+    #dGames = createDicOfGames(reviewData)
+    #dUsers = createDicOfUsers(reviewData)
     #print(dGames['B00LGBJIQ4'])#[('AEEMJX418B5RC', '5.0'), ('A265KF0CQ058RZ', '5.0'), ('A20J2PMC9ZPD4F', '5.0'), ('A3HMVWAGUCNA1K', '5.0')]
     #print(dUsers['A265KF0CQ058RZ'])#[('B004RMK4BC', '5.0'), ('B00KKAQYXM', '5.0'), ('B00LGBJIQ4', '5.0')]
 
-    print("Number of Items: ",len(dGames))#Number of Items:  50210
-    print("Number of Users: ", len(dUsers))#Number of Users:  826767
+    #print("Number of Items: ",len(dGames))#Number of Items:  50210
+    #print("Number of Users: ", len(dUsers))#Number of Users:  826767
 
+    gamesDic = readJSON('meta_Video_Games.json')
+    userList = readCSV('ratings_Video_Games.csv')
+    print(userList[0])
+    print(len(gamesDic))
 
-    d = topNclosestNeighborsPearson(10, dGames, 'B00KKAQYXM')
-    print(d)
+    listOfGameID = []
+    for x in gamesDic:
+        listOfGameID.append(x)
+    listOfGameID.sort()
+
+    dicofusers = createDicOfUsers(userList)
+    listOfUserID = []
+    for x in dicofusers:
+        listOfUserID.append(x)
+    listOfUserID.sort()
+    print("pearson testing")
+    calcPearson(dicofusers, gamesDic, listOfUserID, listOfGameID, 'ARHP7M2HVVFLZ')
+
     
     return 0
 
