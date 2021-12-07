@@ -1,11 +1,14 @@
 import pandas as pd
 import numpy as np
 import ast
+import sys
 import json
 import csv
 import time
 from scipy import stats
 from scipy.spatial import distance
+import os
+
 
 #from lightfm import LightFM
 
@@ -151,12 +154,15 @@ def createReleventList(user, dicofusers, gamesDic):
             l.append(y)
         for y in gamesDic[x[0]]['related']['bought_together']:
             l.append(y)
+        
 
     return l
 
 def main():
-    gamesDic = readJSON('meta_Video_Games.json')
-    userList = readCSV('ratings_Video_Games.csv')
+    dirname = os.path.dirname(__file__)
+
+    gamesDic = readJSON(os.path.join(dirname,'meta_Video_Games.json'))
+    userList = readCSV(os.path.join(dirname,'ratings_Video_Games.csv'))
     #print(userList[0])
     #print(len(gamesDic))
     df = pd.DataFrame(userList)
@@ -173,12 +179,12 @@ def main():
 
 
     
-    data = calcPearson(dicofusers, gamesDic, listOfUserID, listOfGameID, 'ARHP7M2HVVFLZ', 1000)#currently outputs Pval correctly but there is not much difference between the users
+    data = calcPearson(dicofusers, gamesDic, listOfUserID, listOfGameID, 'ARHP7M2HVVFLZ', 5000)#currently outputs Pval correctly but there is not much difference between the users
     #data2 = calcCosine(dicofusers, gamesDic, listOfUserID, listOfGameID, 'ARHP7M2HVVFLZ', 200000)
     #data3 = calcJaccard(dicofusers, gamesDic, listOfUserID, listOfGameID, 'ARHP7M2HVVFLZ', 200000)
-    data4 = calcAllThree(dicofusers, gamesDic, listOfUserID, listOfGameID, 'ARHP7M2HVVFLZ', 100000)
+    data4 = calcAllThree(dicofusers, gamesDic, listOfUserID, listOfGameID, 'ARHP7M2HVVFLZ', 5000)
 
-    d = getRecs(data[-500:], dicofusers, gamesDic)
+    #d = getRecs(data[-500:], dicofusers, gamesDic)
     #d2 = getRecs(data2[-500:], dicofusers, gamesDic)
     #d3 = getRecs(data3[-500:], dicofusers, gamesDic)
     d4 = getRecs(data4[-500:], dicofusers, gamesDic)
@@ -188,15 +194,41 @@ def main():
 
     
 
-    c = checkResults(d, l)
+    c = checkResults(d4, l)
     
     #c2 = checkResults(d2, l)
     #c3 = checkResults(d3, l)
 
-    print("pearson: ", c, len(l))
+    #print("pearson: ", c, len(l))
+    #sys.stdout.flush()
+
     #print("cosine: ", c2)
     #print("jaccard: ", c3)
-    print("results on all three: ", checkResults(d4, l), len(l))
+    
+    #print("results on all three: ", checkResults(d4, l), len(l))
+    #sys.stdout.flush()
+
+    #print(d)
+    #print(d4)
+    #sys.stdout.flush()
+
+    #filter first 10 results
+    entryList = []
+    for entry in d4[:10]:
+        asin = entry[0]
+        item = gamesDic[asin]
+        itemDesc = (item['description'] if 'description' in item else "")
+        imUrl = (item['imUrl'] if 'imUrl' in item else "")
+        tempData = {
+            "asin": asin,
+            "itemDesc": itemDesc,
+            "imUrl": imUrl
+        }
+        print(json.dumps(tempData))
+        sys.stdout.flush()
+
+        #print(, '\n')
+
     return 0
 
 if __name__ == '__main__':
