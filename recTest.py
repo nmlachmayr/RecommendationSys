@@ -54,7 +54,7 @@ def calcPearson(dicofusers, gamesDic, listOfUserID, listOfGameID, user, N):
         for y in dicofusers[x]:
             temp2[listOfGameID.index(y[0])+1] = 1
     
-        t1, t2 = stats.pearsonr(temp1, temp2)
+        t1, t2 = stats.pearsonr(temp1[1:], temp2[1:])
         
         #print(x)
         #print(t1,t2)
@@ -75,7 +75,7 @@ def calcCosine(dicofusers, gamesDic, listOfUserID, listOfGameID, user, N):
         for y in dicofusers[x]:
             temp2[listOfGameID.index(y[0])+1] = 1
 
-        t1 = distance.cosine(temp1, temp2)
+        t1 = distance.cosine(temp1[1:], temp2[1:])
         data.append((x, t1))
     data.sort(key=lambda x:x[1])
     return data#listofSimilarUsers
@@ -93,7 +93,7 @@ def calcJaccard(dicofusers, gamesDic, listOfUserID, listOfGameID, user, N):
         for y in dicofusers[x]:
             temp2[listOfGameID.index(y[0])+1] = 1
 
-        t1 = distance.jaccard(temp1, temp2)
+        t1 = distance.jaccard(temp1[1:], temp2[1:])
         data.append((x, t1))
     data.sort(key=lambda x:x[1])
     return data#listofSimilarUsers
@@ -145,12 +145,21 @@ def createReleventList(user, dicofusers, gamesDic):
     l = []
     for x in dicofusers[user]:
         #print(len(gamesDic[x[0]]['related']['also_bought']))
-        for y in gamesDic[x[0]]['related']['also_bought']:
-            l.append(y)
-        for y in gamesDic[x[0]]['related']['buy_after_viewing']:
-            l.append(y)
-        for y in gamesDic[x[0]]['related']['bought_together']:
-            l.append(y)
+        try:
+            for y in gamesDic[x[0]]['related']['also_bought']:
+                l.append(y)
+        except:
+            print('')
+        try:
+            for y in gamesDic[x[0]]['related']['buy_after_viewing']:
+                l.append(y)
+        except:
+            print('')
+        try:
+            for y in gamesDic[x[0]]['related']['bought_together']:
+                l.append(y)
+        except:
+            print('')
 
     return l
 
@@ -173,18 +182,18 @@ def main():
 
 
     
-    data = calcPearson(dicofusers, gamesDic, listOfUserID, listOfGameID, 'ARHP7M2HVVFLZ', 1000)#currently outputs Pval correctly but there is not much difference between the users
-    #data2 = calcCosine(dicofusers, gamesDic, listOfUserID, listOfGameID, 'ARHP7M2HVVFLZ', 200000)
-    #data3 = calcJaccard(dicofusers, gamesDic, listOfUserID, listOfGameID, 'ARHP7M2HVVFLZ', 200000)
-    data4 = calcAllThree(dicofusers, gamesDic, listOfUserID, listOfGameID, 'ARHP7M2HVVFLZ', 100000)
+    data = calcPearson(dicofusers, gamesDic, listOfUserID, listOfGameID, 'A2H3TQWU51W1WE', 100)#currently outputs Pval correctly but there is not much difference between the users
+    #data2 = calcCosine(dicofusers, gamesDic, listOfUserID, listOfGameID, 'ARHP7M2HVVFLZ', 10000)
+    #data3 = calcJaccard(dicofusers, gamesDic, listOfUserID, listOfGameID, 'ARHP7M2HVVFLZ', 10000)
+    #data4 = calcAllThree(dicofusers, gamesDic, listOfUserID, listOfGameID, 'ARHP7M2HVVFLZ', 10000)
 
     d = getRecs(data[-500:], dicofusers, gamesDic)
     #d2 = getRecs(data2[-500:], dicofusers, gamesDic)
     #d3 = getRecs(data3[-500:], dicofusers, gamesDic)
-    d4 = getRecs(data4[-500:], dicofusers, gamesDic)
+    #d4 = getRecs(data4[-500:], dicofusers, gamesDic)
     
 
-    l = createReleventList( 'ARHP7M2HVVFLZ', dicofusers, gamesDic)
+    l = createReleventList('A2H3TQWU51W1WE', dicofusers, gamesDic)
 
     
 
@@ -194,9 +203,9 @@ def main():
     #c3 = checkResults(d3, l)
 
     print("pearson: ", c, len(l))
-    #print("cosine: ", c2)
-    #print("jaccard: ", c3)
-    print("results on all three: ", checkResults(d4, l), len(l))
+    #print("cosine: ", c2, len(l))
+    #print("jaccard: ", c3, len(l))
+    #print("results on all three: ", checkResults(d4, l), len(l))
     return 0
 
 if __name__ == '__main__':
